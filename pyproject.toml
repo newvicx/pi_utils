@@ -38,7 +38,7 @@ dependencies = [
 dynamic = ["readme", "version"]
 
 [project.scripts]
-httpx = "pi_utils.cli:main"
+httpx = "pi_utils.cli:app"
 
 [project.urls]
 Changelog = "https://github.com/newvicx/pi_utils/blob/master/CHANGELOG.md"
