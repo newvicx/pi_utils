@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pi_utils"
+description = "Utility functions for data export from OSI PI."
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Chris Newville", email = "chrisnewville1396@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+dependencies = [
+    "cryptography",
+    "dateparser",
+    "orjson",
+    "pendulum",
+    "pydantic",
+    "pyspnego",
+    "python-dotenv",
+    "pythonnet",
+    "requests",
+    "rich",
+    "typer",
+    "uplink",
+    "websockets",
+]
+dynamic = ["readme", "version"]
+
+[project.scripts]
+httpx = "pi_utils.cli:main"
+
+[project.urls]
+Changelog = "https://github.com/newvicx/pi_utils/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/newvicx/pi_utils"
+Source = "https://github.com/newvicx/pi_utils"
+
+[tool.hatch.version]
+path = "pi_utils/__version__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/pi_utils",
+    "/README.md",
+]
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
