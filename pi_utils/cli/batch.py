@@ -385,10 +385,10 @@ def data(
             "Server is not defined. Use the '--server' option or set the "
             "PI_UTILS_SDK_SERVER env var."
         )
-    if not web_settings.base_url:
+    if not web_settings.host:
         exit_with_error(
-            "Base URL is not defined. Use the '--base-url' option or set the "
-            "PI_UTILS_WEB_BASE_URL env var."
+            "Host is not defined. Use the '--host' option or set the "
+            "PI_UTILS_WEB_HOST env var."
         )
 
     sdk_client = get_sdk_client(
