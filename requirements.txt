@@ -1,0 +1,13 @@
+cryptography
+dateparser
+orjson
+pendulum
+pydantic
+pyspnego
+python-dotenv
+pythonnet
+requests
+rich
+typer
+uplink
+websockets
