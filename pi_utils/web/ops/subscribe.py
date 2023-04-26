@@ -9,12 +9,15 @@ from websockets.extensions.permessage_deflate import enable_client_permessage_de
 from websockets.headers import build_extension, build_subprotocol, validate_subprotocols
 from websockets.typing import Subprotocol
 
+from pi_utils.util.websockets import (
+    generate_key,
+    EXTENSIONS_CONTEXT,
+    SUBPROTOCOLS_CONTEXT
+)
 from pi_utils.web.channels.subscriber import Subscriber
-from pi_utils.web.context import _s_w_extensions_context, _s_w_protocols_context
 from pi_utils.web.client import PIWebClient
 from pi_utils.web.exceptions import SubscriptionError
 from pi_utils.web.ops.find import find_tags
-from pi_utils.web.util import generate_key
 
 
 
@@ -108,8 +111,8 @@ def subscribe(
     # the other headers.
     num_connections = len("&webId=".join(web_ids).encode()) // MAX_HEADER_BYTES + 1
 
-    extensions_token = _s_w_extensions_context.set(extensions)
-    subprotocols_token = _s_w_protocols_context.set(subprotocols)
+    extensions_token = EXTENSIONS_CONTEXT.set(extensions)
+    subprotocols_token = SUBPROTOCOLS_CONTEXT.set(subprotocols)
     try:
         connections = [
             client.channels.subscribe(
@@ -120,8 +123,8 @@ def subscribe(
             ) for batch in batch_web_ids(web_ids, math.ceil(len(web_ids)/num_connections))
         ]
     finally:
-        _s_w_extensions_context.reset(extensions_token)
-        _s_w_protocols_context.reset(subprotocols_token)
+        EXTENSIONS_CONTEXT.reset(extensions_token)
+        SUBPROTOCOLS_CONTEXT.reset(subprotocols_token)
     
     _LOGGER.debug("Created %i connections for %i tags", num_connections, len(mapped))
     return Subscriber(*connections)

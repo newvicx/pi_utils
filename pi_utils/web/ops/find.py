@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from pi_utils.web.client import PIWebClient
 from pi_utils.web.exceptions import APIResponseError
-from pi_utils.web.util import handle_response
+from pi_utils.web.util import handle_request, handle_response
 
 
 
@@ -22,7 +22,9 @@ def find_dataserver(client: PIWebClient, dataserver: str | None = None) -> str:
         RequestException: There was an ambiguous exception that occurred while
             handling the request.
     """
-    response = client.dataservers.list(selectedFields="Items.Name;Items.WebId")
+    response = handle_request(
+        client.dataservers.list(selectedFields="Items.Name;Items.WebId")
+    )
     data = handle_response(response)
     items = data.get("Items")
     if not items or not isinstance(items, list):
@@ -69,10 +71,13 @@ def find_tags(
 
     results = [
         handle_response(
-            client.dataservers.get_points(
-                dataserver_web_id,
-                nameFilter=tag,
-                selectedFields="Items.Name;Items.WebId"
+            handle_response(
+                client.dataservers.get_points(
+                    dataserver_web_id,
+                    nameFilter=tag,
+                    selectedFields="Items.Name;Items.WebId"
+                ),
+                raise_for_status=False,
             ),
             raise_for_status=False,
             raise_for_content_error=False

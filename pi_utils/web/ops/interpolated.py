@@ -1,6 +1,7 @@
 import concurrent.futures
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from functools import partial
 from typing import List
 
 from pi_utils.types import TimeseriesRow
@@ -11,7 +12,11 @@ from pi_utils.util.time import (
     LOCAL_TZ
 )
 from pi_utils.web.client import PIWebClient
-from pi_utils.web.util import format_streams_content, handle_response
+from pi_utils.web.util import (
+    format_streams_content,
+    handle_request,
+    handle_response
+)
 
 
 
@@ -72,13 +77,17 @@ def get_interpolated(
         for start_time, end_time in zip(start_times, end_times):
             futs = [
                 executor.submit(
-                    client.streams.get_interpolated,
-                    web_id,
-                    startTime=start_time,
-                    endTime=end_time,
-                    timeZone=timezone,
-                    interval=f"{interval.total_seconds()} seconds",
-                    selectedFields="Items.Timestamp;Items.Value;Items.Good"
+                    handle_request,
+                    partial(
+                        client.streams.get_interpolated,
+                        web_id,
+                        startTime=start_time,
+                        endTime=end_time,
+                        timeZone=timezone,
+                        interval=f"{interval.total_seconds()} seconds",
+                        selectedFields="Items.Timestamp;Items.Value;Items.Good"
+                    ),
+                    raise_for_status=False
                 ) for web_id in web_ids
             ]
             concurrent.futures.wait(futs)
