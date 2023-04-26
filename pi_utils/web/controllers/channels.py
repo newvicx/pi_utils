@@ -1,7 +1,7 @@
 from uplink import Consumer, Header, Query, get, headers, response_handler
-from websockets.sync.connection import Connection
 
-from pi_utils.web.util import add_to_client, check_handshake, wrap_socket
+from pi_utils.util.websockets import Connection, check_handshake, wrap_socket
+from pi_utils.web.util import add_to_client
 
 
 
