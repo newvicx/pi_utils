@@ -9,7 +9,6 @@ from pi_utils.util.json import json_dumps, json_loads
 from pi_utils.util.time import isoparse
 
 
-
 class BaseChannelModel(BaseModel):
     """Base model for data returned from 'streamsets/channel' endpoint.
 
@@ -103,21 +102,23 @@ class BaseChannelModel(BaseModel):
     ]
     ```
     """
+
     class Config:
         alias_generator = snake_to_camel
-        extra = 'ignore'
-        allow_arbitrary_types=True
-        json_dumps=json_dumps
-        json_loads=json_loads
+        extra = "ignore"
+        allow_arbitrary_types = True
+        json_dumps = json_dumps
+        json_loads = json_loads
 
 
 class ChannelSubItem(BaseChannelModel):
     """Model for sub items containing timeseries data for a particular WebId."""
+
     timestamp: DateTime
     value: Any
     good: bool = Field(exclude=True)
 
-    @validator('timestamp', pre=True)
+    @validator("timestamp", pre=True)
     def _parse_timestamp(cls, v: str) -> DateTime:
         """Parse timestamp (str) to DateTime."""
         if not isinstance(v, str):
@@ -136,44 +137,53 @@ class ChannelSubItem(BaseChannelModel):
         elif value is not None:
             if isinstance(value, dict):
                 v["value"] = value["Name"]
-        
+
         return v
 
     def __gt__(self, __o: object) -> bool:
         if not isinstance(__o, (datetime, ChannelSubItem)):
-            raise TypeError(f"'>' not supported between instances of {type(self)} and {type(__o)}")
+            raise TypeError(
+                f"'>' not supported between instances of {type(self)} and {type(__o)}"
+            )
         if isinstance(__o, ChannelSubItem):
-            return self.timestamp > __o.timestamp 
+            return self.timestamp > __o.timestamp
         else:
             return self.timestamp > __o
 
     def __ge__(self, __o: object) -> bool:
         if not isinstance(__o, (datetime, ChannelSubItem)):
-            raise TypeError(f"'>=' not supported between instances of {type(self)} and {type(__o)}")
+            raise TypeError(
+                f"'>=' not supported between instances of {type(self)} and {type(__o)}"
+            )
         if isinstance(__o, ChannelSubItem):
-            return self.timestamp >= __o.timestamp 
+            return self.timestamp >= __o.timestamp
         else:
             return self.timestamp >= __o
 
     def __lt__(self, __o: object) -> bool:
         if not isinstance(__o, (datetime, ChannelSubItem)):
-            raise TypeError(f"'<' not supported between instances of {type(self)} and {type(__o)}")
+            raise TypeError(
+                f"'<' not supported between instances of {type(self)} and {type(__o)}"
+            )
         if isinstance(__o, ChannelSubItem):
-            return self.timestamp < __o.timestamp 
+            return self.timestamp < __o.timestamp
         else:
             return self.timestamp < __o
 
     def __le__(self, __o: object) -> bool:
         if not isinstance(__o, (datetime, ChannelSubItem)):
-            raise TypeError(f"'<=' not supported between instances of {type(self)} and {type(__o)}")
+            raise TypeError(
+                f"'<=' not supported between instances of {type(self)} and {type(__o)}"
+            )
         if isinstance(__o, ChannelSubItem):
-            return self.timestamp <= __o.timestamp 
+            return self.timestamp <= __o.timestamp
         else:
             return self.timestamp <= __o
 
 
 class ChannelItem(BaseChannelModel):
     """Model for single top level item pertaining to a WebId."""
+
     name: str
     web_id: str
     items: List[ChannelSubItem]
@@ -189,4 +199,5 @@ class ChannelItem(BaseChannelModel):
 
 class ChannelMessage(BaseChannelModel):
     """Model for streamset messages received from PI Web API."""
+
     items: List[ChannelItem]

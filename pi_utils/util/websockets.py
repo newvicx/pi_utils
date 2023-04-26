@@ -13,24 +13,20 @@ from websockets.protocol import Protocol, CLIENT
 from websockets.sync.connection import Connection
 from websockets.typing import Subprotocol
 
-from pi_utils.web.exceptions import (
-    InvalidHandshake,
-    InvalidUpgrade,
-    NegotiationError
-)
-
+from pi_utils.web.exceptions import InvalidHandshake, InvalidUpgrade, NegotiationError
 
 
 GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-EXTENSIONS_CONTEXT: ContextVar[
-    Sequence[ClientExtensionFactory]
-] = ContextVar("_s_w_extensions_context", default=None)
-SUBPROTOCOLS_CONTEXT: ContextVar[
-    Sequence[Subprotocol]
-] = ContextVar("_s_w_protocols_context", default=None)
+EXTENSIONS_CONTEXT: ContextVar[Sequence[ClientExtensionFactory]] = ContextVar(
+    "_s_w_extensions_context", default=None
+)
+SUBPROTOCOLS_CONTEXT: ContextVar[Sequence[Subprotocol]] = ContextVar(
+    "_s_w_protocols_context", default=None
+)
 
 
 _orig__close_socket = Connection.close_socket
+
 
 def _patched__close_socket(self) -> None:
     _orig__close_socket(self)
@@ -59,7 +55,7 @@ def generate_key() -> str:
     key = secrets.token_bytes(16)
     return base64.b64encode(key).decode()
 
-    
+
 def check_handshake(response: Response) -> Response:
     """Check the status code of the handshake response. If not 101 raises HTTPError."""
     if response.status_code != 101:
@@ -73,20 +69,20 @@ def check_handshake(response: Response) -> Response:
                 reason = response.reason.decode("iso-8859-1")
         else:
             reason = response.reason
-        
-        http_error_msg = (
-            f"{response.status_code} Not Switching Error: {reason} for url: {response.url}"
-        )
+
+        http_error_msg = f"{response.status_code} Not Switching Error: {reason} for url: {response.url}"
         raise HTTPError(http_error_msg, response=response)
-    
+
     upgrade = response.headers.get("Upgrade")
     if upgrade is None or upgrade.lower() != "websocket":
         raise InvalidUpgrade(f"Upgrade: {upgrade}.", response=response)
 
     s_w_accept = response.headers.get("Sec-Websocket-Accept")
-    if s_w_accept is None or s_w_accept != accept_key(response.request.headers.get("Sec-Websocket-Key")):
+    if s_w_accept is None or s_w_accept != accept_key(
+        response.request.headers.get("Sec-Websocket-Key")
+    ):
         raise InvalidHeader("Sec-Websocket-Accept", response=response)
-    
+
     process_extentions(response)
     process_subprotocols(response)
 
@@ -95,7 +91,7 @@ def check_handshake(response: Response) -> Response:
 
 def process_extentions(response: Response) -> None:
     """Handle the Sec-WebSocket-Extensions HTTP response header.
-    
+
     Check that each extension is supported, as well as its parameters.
     """
     # Copied and modified from websockets package
@@ -105,11 +101,11 @@ def process_extentions(response: Response) -> None:
         available_extensions = EXTENSIONS_CONTEXT.get()
         if available_extensions is None:
             raise InvalidHandshake("No extensions supported.", response=response)
-        
+
         parsed_extensions = sum(
             [parse_extension(header_value) for header_value in extensions], []
         )
-        
+
         for name, response_params in parsed_extensions:
             for extension_factory in available_extensions:
                 # Skip non-matching extensions based on their name.
@@ -118,9 +114,7 @@ def process_extentions(response: Response) -> None:
 
                 # Skip non-matching extensions based on their params.
                 try:
-                    extension_factory.process_response_params(
-                        response_params, []
-                    )
+                    extension_factory.process_response_params(response_params, [])
                 except NegotiationError:
                     continue
 
@@ -133,13 +127,13 @@ def process_extentions(response: Response) -> None:
                 raise NegotiationError(
                     f"Unsupported extension: "
                     f"name = {name}, params = {response_params}.",
-                    response=response
+                    response=response,
                 )
 
 
 def process_subprotocols(response: Response) -> None:
     """Handle the Sec-WebSocket-Protocol HTTP response header.
-    
+
     If provided, check that it contains exactly one supported subprotocol.
     """
     # Copied and modified from websockets package
@@ -186,6 +180,6 @@ def wrap_socket(response: Response) -> Connection:
         # this case).
         response.raw.connection.sock = None
         response.raw.close()
-    
+
     protocol = Protocol(side=CLIENT)
     return Connection(socket=socket, protocol=protocol)

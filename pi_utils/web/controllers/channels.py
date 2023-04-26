@@ -4,7 +4,6 @@ from pi_utils.util.websockets import Connection, check_handshake, wrap_socket
 from pi_utils.web.util import add_to_client
 
 
-
 @response_handler(add_to_client, requires_consumer=True)
 @response_handler(wrap_socket)
 @response_handler(check_handshake)
@@ -23,6 +22,6 @@ class Channels(Consumer):
         sec_websocket_subprotocol: Header("Sec-Websocket-Protocol") = None,
         includeInitialValues: Query = None,
         heartbeatRate: Query = None,
-        webIdType: Query = None
+        webIdType: Query = None,
     ) -> Connection:
         """https://docs.aveva.com/bundle/pi-web-api-reference/page/help/controllers/streamset/actions/getchanneladhoc.html"""

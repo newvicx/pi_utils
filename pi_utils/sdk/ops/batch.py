@@ -9,14 +9,8 @@ from enum import Enum
 from typing import Any, Dict, List, TextIO
 
 from pi_utils.sdk.client import SDKClient
-from pi_utils.sdk.types import (
-    SDKSubBatch,
-    SDKUnitBatch,
-    SubBatchInfo,
-    UnitBatchInfo
-)
+from pi_utils.sdk.types import SDKSubBatch, SDKUnitBatch, SubBatchInfo, UnitBatchInfo
 from pi_utils.util.time import fuzzy_parse
-
 
 
 # Prop enums define a label, getter, and priority
@@ -26,20 +20,21 @@ from pi_utils.util.time import fuzzy_parse
 #   labels in different props must have the same priority
 class UnitBatchProps(Enum):
     """Properties to extract from a unit batch."""
+
     ID = ("unique_id", lambda batch: batch.UniqueID, 8)
     START = (
         "start_time",
-        lambda batch: fuzzy_parse(
-            batch.StartTime.LocalDate.ToString()
-        ).replace(tzinfo=None).isoformat(),
-        1
+        lambda batch: fuzzy_parse(batch.StartTime.LocalDate.ToString())
+        .replace(tzinfo=None)
+        .isoformat(),
+        1,
     )
     END = (
         "end_time",
-        lambda batch: fuzzy_parse(
-            batch.EndTime.LocalDate.ToString()
-        ).replace(tzinfo=None).isoformat(),
-        2
+        lambda batch: fuzzy_parse(batch.EndTime.LocalDate.ToString())
+        .replace(tzinfo=None)
+        .isoformat(),
+        2,
     )
     UNIT = ("unit", lambda batch: batch.PIUnit.Name, 2)
     BATCH = ("batch", lambda batch: batch.BatchID, 3)
@@ -49,45 +44,49 @@ class UnitBatchProps(Enum):
 
 class SubBatchProps(Enum):
     """Properties to extract from a sub batch."""
+
     ID = ("unique_id", lambda batch: batch.UniqueID, 8)
     START = (
         "start_time",
-        lambda batch: fuzzy_parse(
-            batch.StartTime.LocalDate.ToString()
-        ).replace(tzinfo=None).isoformat(),
-        1
+        lambda batch: fuzzy_parse(batch.StartTime.LocalDate.ToString())
+        .replace(tzinfo=None)
+        .isoformat(),
+        1,
     )
     END = (
         "end_time",
-        lambda batch: fuzzy_parse(
-            batch.EndTime.LocalDate.ToString()
-        ).replace(tzinfo=None).isoformat(),
-        2
+        lambda batch: fuzzy_parse(batch.EndTime.LocalDate.ToString())
+        .replace(tzinfo=None)
+        .isoformat(),
+        2,
     )
     NAME = ("name", lambda batch: batch.Name, 5)
 
 
 ALL_LABELS = [
-    label for _, label in 
-        sorted(set(
-        itertools.chain.from_iterable(
-            [
+    label
+    for _, label in sorted(
+        set(
+            itertools.chain.from_iterable(
                 [
-                    (enum.value[2], enum.value[0]) for enum in prop
-                ] for prop in (UnitBatchProps, SubBatchProps)
-            ]
+                    [(enum.value[2], enum.value[0]) for enum in prop]
+                    for prop in (UnitBatchProps, SubBatchProps)
+                ]
+            )
         )
-    ))
+    )
 ]
+
 
 @dataclass
 class BatchInfo:
     """Data model returned with batch search result."""
+
     info: List[UnitBatchInfo]
 
     def as_csv(self) -> TextIO:
         """Convert batch info to CSV format.
-        
+
         Sub batches are associated via the 'parent_id' property and sub batches
         will also inherit undefined properties from the unit batch such as 'unit',
         'batch' etc.
@@ -102,7 +101,7 @@ class BatchInfo:
 
         def unpack(
             batches: List[UnitBatchInfo] | List[SubBatchInfo],
-            parent: Dict[str, str] = {}
+            parent: Dict[str, str] = {},
         ) -> None:
             for batch in batches:
                 for label, val in parent.items():
@@ -111,7 +110,7 @@ class BatchInfo:
 
                 for label in ALL_LABELS:
                     unpacked[label].append(batch.get(label))
-                
+
                 unpacked["parent_id"].append(parent.get("unique_id"))
                 if parent:
                     unpacked["type"].append("sub")
@@ -121,16 +120,18 @@ class BatchInfo:
                 sub_batches = batch.get("sub_batches")
                 if sub_batches:
                     unpack(sub_batches, parent=batch)
-    
+
         unpack(self.info)
-        
+
         buffer = io.StringIO(newline="")
-        writer = csv.writer(buffer, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(
+            buffer, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
+        )
         headers = list(unpacked.keys())
         writer.writerow(headers)
         for row in zip(*[unpacked[header] for header in headers]):
             writer.writerow(row)
-        
+
         buffer.seek(0)
         return buffer
 
@@ -154,10 +155,10 @@ def batch_search(
     product: str = "*",
     procedure: str = "*",
     sub_batch: str = "*",
-    exclude_sub_batches: bool = False
+    exclude_sub_batches: bool = False,
 ) -> BatchInfo:
     """Execute a PI batch search against the module DB.
-    
+
     Args:
         client: The `SDKClient` to execute the search.
         unit_id: The unit id mask for the search. Supports wildcards (*) and
@@ -183,8 +184,9 @@ def batch_search(
     Raises:
         ConnectionError: Unable to connect to PI server.
     """
+
     def parse_batches(
-        batches: List[SDKUnitBatch | SDKSubBatch]
+        batches: List[SDKUnitBatch | SDKSubBatch],
     ) -> Iterable[UnitBatchInfo | SubBatchInfo]:
         for batch in batches:
             props = {}
@@ -192,14 +194,14 @@ def batch_search(
                 spec = UnitBatchProps
             else:
                 spec = SubBatchProps
-            
+
             for prop in spec:
                 label, get = prop.value[0:2]
                 try:
                     props[label] = get(batch)
                 except AttributeError:
                     props[label] = None
-            
+
             props.setdefault("sub_batches", [])
             if not exclude_sub_batches and batch.PISubBatches.Count > 0:
                 props["sub_batches"] = list(
@@ -210,11 +212,13 @@ def batch_search(
             yield props
 
     start_time = (
-        start_time.isoformat() if isinstance(start_time, datetime.datetime)
+        start_time.isoformat()
+        if isinstance(start_time, datetime.datetime)
         else start_time.lower()
     )
     end_time = (
-        end_time.isoformat() if isinstance(end_time, datetime.datetime)
+        end_time.isoformat()
+        if isinstance(end_time, datetime.datetime)
         else end_time.lower()
     )
 
@@ -225,18 +229,20 @@ def batch_search(
             itertools.chain.from_iterable(
                 [
                     [
-                        client.unit_batch(batch) for batch in db.PIUnitBatchSearch(
+                        client.unit_batch(batch)
+                        for batch in db.PIUnitBatchSearch(
                             start_time,
                             end_time,
                             unit,
                             batch_id,
                             product,
                             procedure,
-                            sub_batch
+                            sub_batch,
                         )
-                    ] for unit in units
+                    ]
+                    for unit in units
                 ]
             )
         )
-        
+
         return BatchInfo(info=list(parse_batches(batches=batches)))

@@ -95,7 +95,7 @@ class Buffer:
 
     def put(self, message: ChannelMessage) -> None:
         """Add a message to the buffer.
-        
+
         This blocks if the buffer is full and allows backpressure control in
         upstream systems to operate correctly but the block can be interrupted
         by closing the buffer.
@@ -122,7 +122,7 @@ class Buffer:
             if self.closed:
                 # put() was unblocked by close() rather than get()
                 raise EOFError("stream ended")
-            
+
             # Otherwise it was unlocked by get() and we should be able to enqueue
             # a message
             assert len(self.message_queue) < self.maxsize
@@ -132,7 +132,7 @@ class Buffer:
 
     def close(self) -> None:
         """End the stream of messages.
-        
+
         Callling `close` concurrently with `get` or `put` is safe. They will
         raise `EOFError`.
         """

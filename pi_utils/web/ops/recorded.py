@@ -1,7 +1,7 @@
 import concurrent.futures
+import functools
 from collections.abc import Iterable
 from datetime import datetime
-from functools import partial
 from typing import List
 
 from pi_utils.types import TimeseriesRow
@@ -9,15 +9,10 @@ from pi_utils.util.time import (
     get_timestamp_index,
     iter_timeseries_rows,
     split_range_on_frequency,
-    LOCAL_TZ
+    LOCAL_TZ,
 )
 from pi_utils.web.client import PIWebClient
-from pi_utils.web.util import (
-    format_streams_content,
-    handle_request,
-    handle_response
-)
-
+from pi_utils.web.util import format_streams_content, handle_request, handle_response
 
 
 def get_recorded(
@@ -27,7 +22,7 @@ def get_recorded(
     end_time: datetime | None = None,
     request_chunk_size: int | None = None,
     scan_rate: float | None = None,
-    timezone: str | None = None
+    timezone: str | None = None,
 ) -> Iterable[TimeseriesRow]:
     """Stream timestamp aligned, interpolated data for a sequence of PI tags.
 
@@ -66,43 +61,40 @@ def get_recorded(
         start_time=start_time,
         end_time=end_time,
         request_chunk_size=request_chunk_size,
-        scan_rate=scan_rate
+        scan_rate=scan_rate,
     )
-    
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         for start_time, end_time in zip(start_times, end_times):
             futs = [
                 executor.submit(
                     handle_request,
-                    partial(
+                    functools.partial(
                         client.streams.get_recorded,
                         web_id,
                         startTime=start_time.isoformat(),
                         endTime=end_time.isoformat(),
                         timeZone=timezone,
-                        selectedFields="Items.Timestamp;Items.Value;Items.Good"
+                        selectedFields="Items.Timestamp;Items.Value;Items.Good",
                     ),
-                    raise_for_status=False
-                ) for web_id in web_ids
+                    raise_for_status=False,
+                )
+                for web_id in web_ids
             ]
             concurrent.futures.wait(futs)
-            
+
             results = [
                 handle_response(
-                    fut.result(),
-                    raise_for_status=False,
-                    raise_for_content_error=False
-                ) for fut in futs
+                    fut.result(), raise_for_status=False, raise_for_content_error=False
+                )
+                for fut in futs
             ]
-            
+
             data = [format_streams_content(result) for result in results]
             index = get_timestamp_index(data)
 
             start_row = get_recorded_at_time(
-                client=client,
-                web_ids=web_ids,
-                time=start_time,
-                timezone=timezone
+                client=client, web_ids=web_ids, time=start_time, timezone=timezone
             )
             yield start_row
 
@@ -111,42 +103,37 @@ def get_recorded(
             # But, data at that time may exist for some tags so we need to check the
             # timestamps coming out of the iterator and only yield the ones not equal
             # to the start/end time since this would lead to duplicate data.
-            for timestamp, row in iter_timeseries_rows(index=index, data=data, timezone=timezone):
+            for timestamp, row in iter_timeseries_rows(
+                index=index, data=data, timezone=timezone
+            ):
                 if timestamp == start_time:
                     continue
                 elif timestamp == end_time:
                     continue
                 yield timestamp, row
-        
+
         # The next start time is always the last end time, so the only time we
-        # need to get the last row when there are no more time chunks to work
+        # need to get the last row is when there are no more time chunks to work
         # through
         else:
             end_row = get_recorded_at_time(
-                client=client,
-                web_ids=web_ids,
-                time=end_time,
-                timezone=timezone
+                client=client, web_ids=web_ids, time=end_time, timezone=timezone
             )
             yield end_row
 
 
-
 def get_recorded_at_time(
-    client: PIWebClient,
-    web_ids: List[str],
-    time: datetime,
-    timezone: str | None = None
+    client: PIWebClient, web_ids: List[str], time: datetime, timezone: str | None = None
 ) -> TimeseriesRow:
     """Returns the recorded value for sequence of PI tags at a specific time.
-    
+
     Args:
         client: The PIWebClient used to retrieve the data.
         web_ids: The web_ids to stream data for.
         time: The time to get the value at.
         timezone: The timezone to convert the returned data into. Defaults to
             the local system timezone.
-    
+
     Raises:
         RequestException: There was an ambiguous exception that occurred while
             handling the request.
@@ -160,13 +147,14 @@ def get_recorded_at_time(
                     web_id,
                     time=time.isoformat(),
                     timeZone=timezone,
-                    selectedFields="Timestamp;Value;Good"
+                    selectedFields="Timestamp;Value;Good",
                 ),
                 raise_for_status=False,
             ),
             raise_for_status=False,
-            raise_for_content_error=False
-        ) for web_id in web_ids
+            raise_for_content_error=False,
+        )
+        for web_id in web_ids
     ]
 
     row = []

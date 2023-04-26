@@ -1,9 +1,9 @@
 from rich.highlighter import RegexHighlighter
 
 
-
 class LevelHighlighter(RegexHighlighter):
     """Apply style to log levels."""
+
     base_style = "level."
     highlights = [
         r"(?P<debug_level>DEBUG)",
@@ -16,7 +16,6 @@ class LevelHighlighter(RegexHighlighter):
 
 class DefaultHighlighter(RegexHighlighter):
     """Applies style from multiple highlighters."""
+
     base_style = "log."
-    highlights = (
-        LevelHighlighter.highlights
-    )
+    highlights = LevelHighlighter.highlights

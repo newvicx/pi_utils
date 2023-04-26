@@ -12,7 +12,7 @@ from websockets.typing import Subprotocol
 from pi_utils.util.websockets import (
     generate_key,
     EXTENSIONS_CONTEXT,
-    SUBPROTOCOLS_CONTEXT
+    SUBPROTOCOLS_CONTEXT,
 )
 from pi_utils.web.channels.subscriber import Subscriber
 from pi_utils.web.client import PIWebClient
@@ -20,9 +20,8 @@ from pi_utils.web.exceptions import SubscriptionError
 from pi_utils.web.ops.find import find_tags
 
 
-
 _LOGGER = logging.getLogger("pi_utils.web")
-MAX_HEADER_BYTES = 4096 # 4KB
+MAX_HEADER_BYTES = 4096  # 4KB
 
 
 def batch_web_ids(web_ids: Sequence[str], n: int) -> Iterable[Tuple[str]]:
@@ -38,10 +37,10 @@ def subscribe(
     dataserver: str | None = None,
     extensions: Sequence[ClientExtensionFactory] | None = None,
     subprotocols: Sequence[Subprotocol] | None = None,
-    compression: str = "deflate"
+    compression: str = "deflate",
 ) -> Subscriber:
     """Subscribe to a sequence of PI tags for near real-time data streaming.
-    
+
     Wraps N websocket connections and returns a `Subscriber` for iterating
     data returned from the PI Web API. The number of websocket connections is
     a function of the number of tags and how long the WebId's are for the tags,
@@ -79,7 +78,7 @@ def subscribe(
         extensions = enable_client_permessage_deflate(extensions)
     elif compression is not None:
         raise ValueError(f"unsupported compression: {compression}")
-    
+
     s_w_extensions = None
     if extensions is not None:
         s_w_extensions = build_extension(
@@ -91,14 +90,12 @@ def subscribe(
     s_w_protocols = None
     if subprotocols is not None:
         s_w_protocols = build_subprotocol(subprotocols)
-    
-    mapped, unmapped = find_tags(
-        client=client,
-        tags=tags,
-        dataserver=dataserver
-    )
+
+    mapped, unmapped = find_tags(client=client, tags=tags, dataserver=dataserver)
     if unmapped:
-        raise SubscriptionError(f"Could not find {len(unmapped)} tags.", unmapped=unmapped)
+        raise SubscriptionError(
+            f"Could not find {len(unmapped)} tags.", unmapped=unmapped
+        )
     web_ids = [web_id for _, web_id in mapped]
 
     # Determine how many connections we need to create based on the size of all
@@ -119,12 +116,15 @@ def subscribe(
                 webId=batch,
                 sec_websocket_key=generate_key(),
                 sec_websocket_extensions=s_w_extensions,
-                sec_websocket_subprotocol=s_w_protocols
-            ) for batch in batch_web_ids(web_ids, math.ceil(len(web_ids)/num_connections))
+                sec_websocket_subprotocol=s_w_protocols,
+            )
+            for batch in batch_web_ids(
+                web_ids, math.ceil(len(web_ids) / num_connections)
+            )
         ]
     finally:
         EXTENSIONS_CONTEXT.reset(extensions_token)
         SUBPROTOCOLS_CONTEXT.reset(subprotocols_token)
-    
+
     _LOGGER.debug("Created %i connections for %i tags", num_connections, len(mapped))
     return Subscriber(*connections)

@@ -7,4 +7,4 @@ def format_docstring(description: str) -> str:
 
 def snake_to_camel(string: str) -> str:
     """Covert snake case (arg_a) to camel case (ArgA)."""
-    return ''.join(word.capitalize() for word in string.split('_'))
+    return "".join(word.capitalize() for word in string.split("_"))

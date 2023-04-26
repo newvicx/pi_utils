@@ -8,9 +8,9 @@ from rich.theme import Theme
 from pi_utils.logging.highlighters import DefaultHighlighter
 
 
-
 class ConsoleHandler(logging.StreamHandler):
     """The default console handler which highlights log levels."""
+
     def __init__(
         self,
         stream=None,
@@ -24,11 +24,7 @@ class ConsoleHandler(logging.StreamHandler):
         theme = Theme(styles, inherit=False)
 
         self.level = level
-        self.console = Console(
-            highlighter=highlighter,
-            theme=theme,
-            file=self.stream
-        )
+        self.console = Console(highlighter=highlighter, theme=theme, file=self.stream)
 
     def emit(self, record: logging.LogRecord):
         try:

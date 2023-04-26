@@ -7,9 +7,8 @@ from .ops import (
     get_interpolated,
     get_recorded,
     get_recorded_at_time,
-    subscribe
+    subscribe,
 )
-
 
 
 __all__ = [

@@ -2,11 +2,10 @@ from requests.models import Response
 from uplink import Consumer, Query, get, headers
 
 
-
 @headers({"Accept": "application/json"})
 class Streams(Consumer):
     """https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/controllers/stream.html"""
-    
+
     @get("/piwebapi/streams/{web_id}/interpolated")
     def get_interpolated(
         self,
@@ -20,7 +19,7 @@ class Streams(Consumer):
         desiredUnits: Query = None,
         filterExpression: Query = None,
         includeFilteredValues: Query = None,
-        selectedFields: Query = None
+        selectedFields: Query = None,
     ) -> Response:
         """https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/controllers/stream/actions/getinterpolated.html"""
 
@@ -37,7 +36,7 @@ class Streams(Consumer):
         includeFilteredValues: Query = None,
         maxCount: Query = None,
         selectedFields: Query = None,
-        associations: Query = None
+        associations: Query = None,
     ) -> Response:
         """https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/controllers/stream/actions/getrecorded.html"""
 
@@ -50,6 +49,6 @@ class Streams(Consumer):
         retrievalMode: Query = None,
         desiredUnits: Query = None,
         selectedFields: Query = None,
-        associations: Query = None
+        associations: Query = None,
     ) -> Response:
         """https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/controllers/stream/actions/getrecordedattime.html"""

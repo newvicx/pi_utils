@@ -11,7 +11,6 @@ from pi_utils.util.websockets import Connection
 from pi_utils.web.exceptions import APIResponseError
 
 
-
 _LOGGER = logging.getLogger("pi_utils.web")
 
 
@@ -21,7 +20,7 @@ def format_streams_content(
     """Extract timestamp and value for each item in a multi-value stream response."""
     formatted = {"timestamp": [], "value": []}
     items = content.get("Items", []) if content is not None else []
-    
+
     for item in items:
         timestamp = item["Timestamp"]
         good = item["Good"]
@@ -36,17 +35,16 @@ def format_streams_content(
                 value = value["Name"]
         formatted["timestamp"].append(timestamp)
         formatted["value"].append(value)
-    
+
     return formatted
 
 
 def handle_request(
-    request: Callable[[], Response],
-    raise_for_status: bool = True
+    request: Callable[[], Response], raise_for_status: bool = True
 ) -> JSONContent | None:
     """Primary request handling for all HTTP requests to the PI Web API. This
     will load all the content from the response into memory.
-    
+
     Args:
         request: A callable that returns a response.
         raise_for_status: If `True` unsuccessful status codes will raise
@@ -70,10 +68,10 @@ def handle_request(
 def handle_response(
     response: Response | None,
     raise_for_status: bool = True,
-    raise_for_content_error: bool = True
+    raise_for_content_error: bool = True,
 ) -> JSONContent | None:
     """Primary response handling for all data HTTP requests to the PI Web API.
-    
+
     Args:
         response: The response object returned from the request.
         raise_for_status: If `True` and the 'WebException' property is present
@@ -100,7 +98,7 @@ def handle_response(
                 raise
             _LOGGER.warning(str(e))
             return
-    
+
     # Check for Errors property
     # Some controllers can have an errors property on a successful response
     # if invalid/not enough parameters were passed.
@@ -111,7 +109,7 @@ def handle_response(
             raise APIResponseError(err_msg, errors=errors, response=response)
         _LOGGER.warning(err_msg, extra={"errors": errors})
         return
-    
+
     return data
 
 
@@ -126,6 +124,8 @@ def add_to_client(consumer: Consumer, connection: Connection) -> Connection:
         # does not have a direct reference to the session
         pass
     else:
-        setattr(connection, "close_callback", consumer.client.session.websockets.discard)
+        setattr(
+            connection, "close_callback", consumer.client.session.websockets.discard
+        )
 
     return connection

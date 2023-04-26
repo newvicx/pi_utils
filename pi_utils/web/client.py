@@ -12,14 +12,13 @@ from pi_utils.util.kerberos import HTTPKerberosAuth
 from pi_utils.web.controllers import Channels, DataServers, Streams
 
 
-
 _WEB_CLIENT: "PIWebClient" = None
 _web_client_lock = threading.Lock()
 
 
-
 class PIWebClient:
     """Interface for a PI Web API client."""
+
     consumers: Dict[str, Consumer] = {}
     _lock = threading.Lock()
 
@@ -33,7 +32,7 @@ class PIWebClient:
         headers: Dict[str, str] | None = None,
         cookies: RequestsCookieJar | Dict[str, str] | None = None,
         kerberos: bool = True,
-        **kerberos_args: Any
+        **kerberos_args: Any,
     ) -> None:
         scheme = "https" if tls else "http"
         port = f":{port}" if port else ""
@@ -55,7 +54,7 @@ class PIWebClient:
                 session.cookies = jar
             if kerberos:
                 session.auth = HTTPKerberosAuth(**kerberos_args)
-        
+
         session.stream = True
         setattr(session, "websockets", set())
         self.session = session
@@ -64,7 +63,7 @@ class PIWebClient:
     def channels(self) -> Channels:
         """Return a `Channels` consumer."""
         return self._get_consumer_instance(Channels)
-    
+
     @property
     def dataservers(self) -> DataServers:
         """Returns a `DataServers` consumer."""
@@ -89,7 +88,7 @@ class PIWebClient:
 
     def _get_consumer_instance(self, consumer: Type[Consumer]) -> Consumer:
         """Get an instance of the consumer for a controller.
-        
+
         This caches the consumer instance in the class for reuse.
         """
         with self._lock:
@@ -108,7 +107,7 @@ class PIWebClient:
         self,
         exc_type: Type[BaseException],
         exc_val: BaseException,
-        traceback: TracebackType
+        traceback: TracebackType,
     ) -> None:
         self.close()
 

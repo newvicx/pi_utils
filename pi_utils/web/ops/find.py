@@ -7,7 +7,6 @@ from pi_utils.web.exceptions import APIResponseError
 from pi_utils.web.util import handle_request, handle_response
 
 
-
 _LOGGER = logging.getLogger("pi_utils.web")
 
 
@@ -40,12 +39,10 @@ def find_dataserver(client: PIWebClient, dataserver: str | None = None) -> str:
 
 
 def find_tags(
-    client: PIWebClient,
-    tags: Sequence[str],
-    dataserver: str | None = None
+    client: PIWebClient, tags: Sequence[str], dataserver: str | None = None
 ) -> Tuple[List[Tuple[str, str]], List[str]]:
     """Get the WebId for a sequence of pi tags.
-    
+
     If a tag is not found or the query returns multiple results, the query for
     for that tag will fail. Therefore you cannot use wild card searches
     for this method (unless the wild card search returns 1 tag).
@@ -58,7 +55,7 @@ def find_tags(
         tags: The sequence of tags to search for WebId's.
         dataserver: The name of the data archive server. The WebId of the archive
             server will be searched.
-    
+
     Raises:
         HTTPError: An HTTP error occurred trying to find the dataserver WebID.
         APIResponseError: Unable to find dataserver WebID.
@@ -66,7 +63,7 @@ def find_tags(
             handling the request.
     """
     tags = [tag.upper() for tag in tags]
-    
+
     dataserver_web_id = find_dataserver(client, dataserver=dataserver)
 
     results = [
@@ -75,15 +72,16 @@ def find_tags(
                 client.dataservers.get_points(
                     dataserver_web_id,
                     nameFilter=tag,
-                    selectedFields="Items.Name;Items.WebId"
+                    selectedFields="Items.Name;Items.WebId",
                 ),
                 raise_for_status=False,
             ),
             raise_for_status=False,
-            raise_for_content_error=False
-        ) for tag in tags
+            raise_for_content_error=False,
+        )
+        for tag in tags
     ]
-    
+
     found = 0
     mapped: List[Tuple[str, str]] = []
     unmapped: List[str] = []

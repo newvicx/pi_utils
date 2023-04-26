@@ -5,7 +5,6 @@ from pi_utils.logging.setup import setup_console_logging
 from pi_utils.__version__ import __version__
 
 
-
 app = Typer(add_completion=False, no_args_is_help=True)
 
 
@@ -27,10 +26,7 @@ def main(
         help="Display the current version.",
         is_eager=True,
     ),
-    debug: bool = Option(
-        default=False,
-        help="Enable debug logging."
-    )
+    debug: bool = Option(default=False, help="Enable debug logging."),
 ) -> None:
     app.console = _get_rich_console(stderr=False)
     setup_console_logging(debug)

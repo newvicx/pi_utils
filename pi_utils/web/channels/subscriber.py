@@ -13,7 +13,6 @@ from pi_utils.web.channels.messages import Buffer
 from pi_utils.web.channels.models import ChannelMessage
 
 
-
 _LOGGER = logging.getLogger("pi_utils.web.channel")
 
 
@@ -21,6 +20,7 @@ class Subscriber(Iterable[ChannelMessage]):
     """Iterable interface for consuming from multiple websocket connections
     simultaneously.
     """
+
     def __init__(self, *connections: Connection, maxsize: int | None = None) -> None:
         self._connections = connections
         self._buffer = Buffer(maxsize=maxsize)
@@ -48,15 +48,17 @@ class Subscriber(Iterable[ChannelMessage]):
         try:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 consumers = [
-                    executor.submit(self._consume_from, connection) for connection
-                    in self._connections
+                    executor.submit(self._consume_from, connection)
+                    for connection in self._connections
                 ]
                 for consumer in consumers:
                     consumer.add_done_callback(self._connection_lost)
-                concurrent.futures.wait(consumers, return_when=concurrent.futures.FIRST_COMPLETED)
+                concurrent.futures.wait(
+                    consumers, return_when=concurrent.futures.FIRST_COMPLETED
+                )
         finally:
             self._close()
-    
+
     def _consume_from(self, connection: Connection) -> None:
         """Consume from a single connection and buffer the messages."""
         with connection:
@@ -67,10 +69,7 @@ class Subscriber(Iterable[ChannelMessage]):
                     except ValidationError as e:
                         _LOGGER.warning(
                             "Message validation failed, discarding message",
-                            extra={
-                                "message": message,
-                                "errors": e.json()
-                            }
+                            extra={"message": message, "errors": e.json()},
                         )
                     except EOFError:
                         _LOGGER.debug("EOF received on buffer, closing connection")
@@ -95,7 +94,7 @@ class Subscriber(Iterable[ChannelMessage]):
                 if self.exception is not None:
                     raise self.exception from e
                 break
-    
+
     def __enter__(self) -> "Subscriber":
         return self
 
@@ -103,6 +102,6 @@ class Subscriber(Iterable[ChannelMessage]):
         self,
         exc_type: Type[BaseException],
         exc_val: BaseException,
-        traceback: TracebackType
+        traceback: TracebackType,
     ) -> None:
         self.close()

@@ -3,5 +3,5 @@ from pi_utils.web.exceptions import (
     InvalidHandshake,
     InvalidUpgrade,
     NegotiationError,
-    SubscriptionError
+    SubscriptionError,
 )

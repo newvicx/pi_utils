@@ -4,9 +4,8 @@ from typer.rich_utils import (
     highlighter,
     ALIGN_ERRORS_PANEL,
     ERRORS_PANEL_TITLE,
-    STYLE_ERRORS_PANEL_BORDER
+    STYLE_ERRORS_PANEL_BORDER,
 )
-
 
 
 def exit_with_error(message, code=1):

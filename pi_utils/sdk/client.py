@@ -11,7 +11,6 @@ import clr
 from pi_utils.sdk.types import SDK, SDKConnection, SDKSubBatch, SDKUnitBatch
 
 
-
 _LOGGER = logging.getLogger("pi_utils.sdk")
 _SDK_CLIENT: "SDKClient" = None
 _sdk_client_lock = threading.Lock()
@@ -19,7 +18,7 @@ _sdk_client_lock = threading.Lock()
 
 class SDKClient:
     """Interface for connecting to PI through the PI SDK.
-    
+
     Args:
         server: The PI server to connect to.
         path: The path to the SDK assembly (.dll). Defaults to
@@ -28,34 +27,34 @@ class SDKClient:
         max_connections: Limits the total number of the concurrent connections to
             the server through the SDK.
     """
+
     _sdk: Type[SDK] = None
     _sub_batch: Type[SDKSubBatch] = None
     _unit_batch: Type[SDKUnitBatch] = None
 
     def __new__(cls: Type["SDKClient"], *args: Any, **kwargs: Any) -> "SDKClient":
         if cls._sdk is None:
-            path = kwargs.get('path') or "C:/Program Files/PIPC/pisdk/PublicAssemblies/OSIsoft.PISDK.dll"
+            path = (
+                kwargs.get("path")
+                or "C:/Program Files/PIPC/pisdk/PublicAssemblies/OSIsoft.PISDK.dll"
+            )
             path = Path(path)
 
             if not path.exists():
                 raise FileNotFoundError(str(path))
-            
+
             clr.AddReference(str(path))
-            
+
             from PISDK import PISDK, PISubBatch, PIUnitBatch
-            
+
             cls._sdk = PISDK
             cls._sub_batch = PISubBatch
             cls._unit_batch = PIUnitBatch
-        
+
         return super(SDKClient, cls).__new__(cls)
-    
+
     def __init__(
-        self,
-        *,
-        server: str,
-        path: str | Path | None = None,
-        max_connections: int = 4
+        self, *, server: str, path: str | Path | None = None, max_connections: int = 4
     ) -> None:
         self._server_name = server
         self._path = path
@@ -95,9 +94,7 @@ class SDKClient:
 
 
 def get_sdk_client(
-    server: str,
-    path: str | Path | None = None,
-    max_connections: int = 4
+    server: str, path: str | Path | None = None, max_connections: int = 4
 ) -> SDKClient:
     """Build a `SDKClient`. This returns a singleton instance of the client."""
     with _sdk_client_lock:
@@ -105,10 +102,6 @@ def get_sdk_client(
         if _SDK_CLIENT is not None:
             assert isinstance(_SDK_CLIENT, SDKClient)
             return _SDK_CLIENT
-        client = SDKClient(
-            server=server,
-            path=path,
-            max_connections=max_connections
-        )
+        client = SDKClient(server=server, path=path, max_connections=max_connections)
         _SDK_CLIENT = client
         return client

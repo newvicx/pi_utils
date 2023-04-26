@@ -20,7 +20,6 @@ from requests.cookies import cookiejar_from_dict
 from requests.packages.urllib3 import HTTPResponse
 
 
-
 """Re-implementation of requests-kerberos with type hints, modified string
 formatting and less verbose logging.
 """
@@ -34,12 +33,14 @@ DISABLED = 3
 class NoCertificateRetrievedWarning(Warning):
     pass
 
+
 class UnknownSignatureAlgorithmOID(Warning):
     pass
 
 
 class MutualAuthenticationError(RequestException):
     """Mutual Authentication Error"""
+
 
 class KerberosExchangeError(RequestException):
     """Kerberos Exchange Failed Error"""
@@ -53,6 +54,7 @@ class SanitizedResponse(Response):
     which do not support mutual authentication when mutual authentication is
     required.
     """
+
     def __init__(self, response: Response):
         super(SanitizedResponse, self).__init__()
         self.status_code = response.status_code
@@ -67,8 +69,8 @@ class SanitizedResponse(Response):
         self._content = ""
         self.cookies = cookiejar_from_dict({})
         self.headers = CaseInsensitiveDict()
-        self.headers['content-length'] = '0'
-        for header in ('date', 'server'):
+        self.headers["content-length"] = "0"
+        for header in ("date", "server"):
             if header in response.headers:
                 self.headers[header] = response.headers[header]
 
@@ -80,18 +82,18 @@ def format_auth_header(auth_header: str | None) -> str:
 
 def negotiate_value(response: Response) -> str | None:
     """Extracts the gssapi authentication token from the appropriate header"""
-    if hasattr(negotiate_value, 'regex'):
+    if hasattr(negotiate_value, "regex"):
         regex = negotiate_value.regex
     else:
         # There's no need to re-compile this EVERY time it is called. Compile
         # it once and you won't have the performance hit of the compilation.
-        regex = re.compile(r'Negotiate\s*([^,]*)', re.I)
+        regex = re.compile(r"Negotiate\s*([^,]*)", re.I)
         negotiate_value.regex = regex
 
     if response.status_code == 407:
-        authreq = response.headers.get('proxy-authenticate', None)
+        authreq = response.headers.get("proxy-authenticate", None)
     else:
-        authreq = response.headers.get('www-authenticate', None)
+        authreq = response.headers.get("www-authenticate", None)
 
     if authreq:
         match_obj = regex.search(authreq)
@@ -108,13 +110,14 @@ def get_certificate_hash(certificate_der: bytes):
     except UnsupportedAlgorithm as e:
         warnings.warn(
             "Failed to get signature algorithm from certificate, "
-            f"unable to pass channel bindings: {str(e)}", UnknownSignatureAlgorithmOID
+            f"unable to pass channel bindings: {str(e)}",
+            UnknownSignatureAlgorithmOID,
         )
         return
 
     # if the cert signature algorithm is either md5 or sha1 then use sha256
     # otherwise use the signature algorithm
-    if hash_algorithm.name in ['md5', 'sha1']:
+    if hash_algorithm.name in ["md5", "sha1"]:
         digest = hashes.Hash(hashes.SHA256(), default_backend())
     else:
         digest = hashes.Hash(hash_algorithm, default_backend())
@@ -128,7 +131,7 @@ def get_certificate_hash(certificate_der: bytes):
 def get_channel_bindings_application_data(response: Response):
     """https://tools.ietf.org/html/rfc5929 4. The 'tls-server-end-point' Channel
     Binding Type.
-    
+
     Gets the application_data value for the 'tls-server-end-point' CBT Type.
     This is ultimately the SHA256 hash of the certificate of the HTTPS endpoint
     appended onto tls-server-end-point. This value is then passed along to the
@@ -146,7 +149,7 @@ def get_channel_bindings_application_data(response: Response):
         except AttributeError:
             warnings.warn(
                 "Failed to get raw socket for CBT; has urllib3 impl changed",
-                NoCertificateRetrievedWarning
+                NoCertificateRetrievedWarning,
             )
         else:
             try:
@@ -155,12 +158,12 @@ def get_channel_bindings_application_data(response: Response):
                 pass
             else:
                 certificate_hash = get_certificate_hash(server_certificate)
-                application_data = b'tls-server-end-point:' + certificate_hash
+                application_data = b"tls-server-end-point:" + certificate_hash
     else:
         warnings.warn(
             "Requests is running with a non urllib3 backend, cannot retrieve "
             "server certificate for CBT",
-            NoCertificateRetrievedWarning
+            NoCertificateRetrievedWarning,
         )
 
     return application_data
@@ -169,6 +172,7 @@ def get_channel_bindings_application_data(response: Response):
 class HTTPKerberosAuth(AuthBase):
     """Attaches HTTP GSSAPI/Kerberos Authentication to the given Request.
     object."""
+
     def __init__(
         self,
         mutual_authentication: int = REQUIRED,
@@ -178,7 +182,7 @@ class HTTPKerberosAuth(AuthBase):
         principal: str | None = None,
         hostname_override: str | None = None,
         sanitize_mutual_error_response: bool = True,
-        send_cbt: bool = True
+        send_cbt: bool = True,
     ):
         self._context = {}
         self.mutual_authentication = mutual_authentication
@@ -196,13 +200,10 @@ class HTTPKerberosAuth(AuthBase):
         self._cbts = {}
 
     def generate_request_header(
-        self,
-        response: Response,
-        host: str,
-        is_preemptive: bool = False
+        self, response: Response, host: str, is_preemptive: bool = False
     ) -> str:
         """Generates the GSSAPI authentication token with kerberos.
-        
+
         If any GSSAPI step fails, raise `KerberosExchangeError` with failure detail.
         """
 
@@ -219,7 +220,9 @@ class HTTPKerberosAuth(AuthBase):
             # allows use of an arbitrary hostname for the kerberos exchange
             # (eg, in cases of aliased hosts, internal vs external, CNAMEs
             # w/ name-based HTTP hosting)
-            kerb_host = self.hostname_override if self.hostname_override is not None else host
+            kerb_host = (
+                self.hostname_override if self.hostname_override is not None else host
+            )
 
             self._context[host] = ctx = spnego.client(
                 username=self.principal,
@@ -250,8 +253,13 @@ class HTTPKerberosAuth(AuthBase):
 
         host = urlparse(response.url).hostname
         if response.status_code == 407:
-            if 'proxies' in kwargs and urlparse(response.url).scheme in kwargs['proxies']:
-                host = urlparse(kwargs['proxies'][urlparse(response.url).scheme]).hostname
+            if (
+                "proxies" in kwargs
+                and urlparse(response.url).scheme in kwargs["proxies"]
+            ):
+                host = urlparse(
+                    kwargs["proxies"][urlparse(response.url).scheme]
+                ).hostname
 
         try:
             auth_header = self.generate_request_header(response, host)
@@ -260,11 +268,13 @@ class HTTPKerberosAuth(AuthBase):
             return response
 
         if response.status_code == 407:
-            _LOGGER.debug("Proxy-Authorization header: %s", format_auth_header(auth_header))
-            response.request.headers['Proxy-Authorization'] = auth_header
+            _LOGGER.debug(
+                "Proxy-Authorization header: %s", format_auth_header(auth_header)
+            )
+            response.request.headers["Proxy-Authorization"] = auth_header
         else:
             _LOGGER.debug("Authorization header: %s", format_auth_header(auth_header))
-            response.request.headers['Authorization'] = auth_header
+            response.request.headers["Authorization"] = auth_header
 
         # Consume the content so we can reuse the connection for the next
         # request.
@@ -302,7 +312,9 @@ class HTTPKerberosAuth(AuthBase):
                     # raise an exception so the user doesn't use an untrusted
                     # response.
                     _LOGGER.error("Mutual authentication failed")
-                    raise MutualAuthenticationError(f"Unable to authenticate {repr(response)}")
+                    raise MutualAuthenticationError(
+                        f"Unable to authenticate {repr(response)}"
+                    )
 
                 # Authentication successful
                 self.auth_done = True
@@ -313,12 +325,12 @@ class HTTPKerberosAuth(AuthBase):
                 if not response.ok:
                     _LOGGER.error(
                         "Mutual authentication unavailable on %i response",
-                        response.status_code
+                        response.status_code,
                     )
 
                 if (
-                    self.mutual_authentication == REQUIRED and
-                    self.sanitize_mutual_error_response
+                    self.mutual_authentication == REQUIRED
+                    and self.sanitize_mutual_error_response
                 ):
                     return SanitizedResponse(response)
                 else:
@@ -328,20 +340,23 @@ class HTTPKerberosAuth(AuthBase):
                 # required, raise an exception so the user doesn't use an
                 # untrusted response.
                 _LOGGER.error("Mutual authentication failed")
-                raise MutualAuthenticationError(f"Unable to authenticate {repr(response)}")
+                raise MutualAuthenticationError(
+                    f"Unable to authenticate {repr(response)}"
+                )
         else:
             _LOGGER.debug("Skipping mutual authentication, returning %r", response)
             return response
 
     def authenticate_server(self, response: Response) -> bool:
         """Uses GSSAPI to authenticate the server.
-        
+
         Returns `True` on success, `False` on failure.
         """
 
         response_token = negotiate_value(response)
-        _LOGGER.debug("Authenticating server response: %s",
-            base64.b64encode(response_token).decode() if response_token else ""
+        _LOGGER.debug(
+            "Authenticating server response: %s",
+            base64.b64encode(response_token).decode() if response_token else "",
         )
 
         host = urlparse(response.url).hostname
@@ -355,8 +370,8 @@ class HTTPKerberosAuth(AuthBase):
 
     def handle_response(self, response: Response, **kwargs: Any) -> Response:
         """Takes the given response and tries kerberos-auth, as needed."""
-        num_401s = kwargs.pop('num_401s', 0)
-        num_407s = kwargs.pop('num_407s', 0)
+        num_401s = kwargs.pop("num_401s", 0)
+        num_407s = kwargs.pop("num_407s", 0)
 
         # Check if we have already tried to get the CBT data value
         if self.send_cbt:
@@ -404,7 +419,7 @@ class HTTPKerberosAuth(AuthBase):
 
     def deregister(self, response: Response) -> None:
         """Deregisters the response handler"""
-        response.request.deregister_hook('response', self.handle_response)
+        response.request.deregister_hook("response", self.handle_response)
 
     def __call__(self, request: Request):
         if self.force_preemptive and not self.auth_done:
@@ -412,10 +427,13 @@ class HTTPKerberosAuth(AuthBase):
             # by the 401 handler
             host = urlparse(request.url).hostname
             auth_header = self.generate_request_header(None, host, is_preemptive=True)
-            _LOGGER.debug("Sending preemptive authorization header: %s", format_auth_header(auth_header))
-            request.headers['Authorization'] = auth_header
+            _LOGGER.debug(
+                "Sending preemptive authorization header: %s",
+                format_auth_header(auth_header),
+            )
+            request.headers["Authorization"] = auth_header
 
-        request.register_hook('response', self.handle_response)
+        request.register_hook("response", self.handle_response)
         try:
             self.pos = request.body.tell()
         except AttributeError:

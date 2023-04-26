@@ -4,7 +4,6 @@ from typing import Any
 import orjson
 
 
-
 def json_loads(v: str | bytes) -> Any:
     """JSON decoder which uses orjson for bytes and builtin json for str."""
     match v:

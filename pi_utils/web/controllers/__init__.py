@@ -3,9 +3,4 @@ from .dataservers import DataServers
 from .streams import Streams
 
 
-
-__all__ = [
-    "Channels",
-    "DataServers",
-    "Streams"
-]
+__all__ = ["Channels", "DataServers", "Streams"]
