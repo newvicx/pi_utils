@@ -143,7 +143,8 @@ def get_recorded_at_time(
     results = [
         handle_response(
             handle_request(
-                client.streams.get_recorded_at_time(
+                functools.partial(
+                    client.streams.get_recorded_at_time,
                     web_id,
                     time=time.isoformat(),
                     timeZone=timezone,
