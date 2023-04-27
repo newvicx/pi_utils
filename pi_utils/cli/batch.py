@@ -276,7 +276,13 @@ def data(
             "PI_UTILS_WEB_PORT environment variable."
         ),
     ),
-    tls: bool = Option(default=True, help="Connect to the web API over TLS."),
+    tls: bool = Option(
+        default=True,
+        help=(
+            "Connect to the web API over TLS. Can be set with PI_UTILS_WEB_TLS "
+            "environment variable."
+        ),
+    ),
     dataserver: Optional[str] = Option(
         default=None,
         help=(
@@ -285,9 +291,13 @@ def data(
         ),
     ),
     login: bool = Option(default=False, help="Prompt for kerberos principal."),
-    mutual_authentication: Optional[MutualAuthentication] = Option(
+    mutual_authentication: Optional[int] = Option(
         default=None,
-        help="Require mutual authentication from server in kerberos auth."
+        help=(
+            "Require mutual authentication from server in kerberos auth. Can be "
+            "set with the PI_UTILS_WEB_MUTUAL_AUTHENTICATION environment variable. "
+            "1 = REQUIRED, 2 = OPTIONAL, 3 = DISABLED."
+        ),
     ),
     service: Optional[str] = Option(
         default=None,
@@ -310,14 +320,15 @@ def data(
             "If communicating with a host whose DNS name doesn't match its "
             "kerberos hostname (eg, behind a content switch or load balancer), "
             "the hostname used for the Kerberos GSS exchange can be overridden. "
-            "Defaults to `None`."
+            "Can be set through the PI_UTILS_WEB_HOSTNAME_OVERRIDE environment variable."
         ),
     ),
     send_cbt: bool = Option(
         default=True,
         help=(
             "Automatically attempt to bind the authentication token with the "
-            "channel binding data when connecting over a TLS connection."
+            "channel binding data when connecting over a TLS connection. Can be "
+            "set with the PI_UTILS_WEB_SEND_CBT environment variable."
         ),
     ),
 ) -> None:
