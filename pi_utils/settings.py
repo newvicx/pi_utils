@@ -4,7 +4,7 @@ from typing import Dict
 from pydantic import BaseSettings, FilePath, Field, SecretStr
 
 from pi_utils.util.formatting import format_docstring
-from pi_utils.util.kerberos import REQUIRED
+from pi_utils.util.kerberos import MutualAuthentication
 
 
 class SDKSettings(BaseSettings):
@@ -99,8 +99,8 @@ class WebSettings(BaseSettings):
         used on requests. Defaults to `True`."""
         ),
     )
-    mutual_authentication: int = Field(
-        default=REQUIRED,
+    mutual_authentication: MutualAuthentication = Field(
+        default=MutualAuthentication,
         decription=format_docstring(
             """Integer value defining the mutual
         authentication requirements (1: Required, 2: Optional, 3: Disabled).

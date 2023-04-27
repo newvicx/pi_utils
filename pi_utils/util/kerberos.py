@@ -2,6 +2,7 @@ import base64
 import logging
 import re
 import warnings
+from enum import IntEnum
 from typing import Any
 from urllib.parse import urlparse
 
@@ -25,9 +26,12 @@ formatting and less verbose logging.
 """
 
 _LOGGER = logging.getLogger("kerberos")
-REQUIRED = 1
-OPTIONAL = 2
-DISABLED = 3
+
+
+class MutualAuthentication(IntEnum):
+    REQUIRED = 1
+    OPTIONAL = 2
+    DISABLED = 3
 
 
 class NoCertificateRetrievedWarning(Warning):
@@ -175,7 +179,7 @@ class HTTPKerberosAuth(AuthBase):
 
     def __init__(
         self,
-        mutual_authentication: int = REQUIRED,
+        mutual_authentication: int = MutualAuthentication.REQUIRED,
         service: str = "HTTP",
         delegate: bool = False,
         force_preemptive: bool = False,
@@ -185,7 +189,7 @@ class HTTPKerberosAuth(AuthBase):
         send_cbt: bool = True,
     ):
         self._context = {}
-        self.mutual_authentication = mutual_authentication
+        self.mutual_authentication = MutualAuthentication(mutual_authentication)
         self.delegate = delegate
         self.pos = None
         self.service = service
@@ -211,7 +215,7 @@ class HTTPKerberosAuth(AuthBase):
         gssflags = spnego.ContextReq.sequence_detect
         if self.delegate:
             gssflags |= spnego.ContextReq.delegate
-        if self.mutual_authentication != DISABLED:
+        if self.mutual_authentication != MutualAuthentication.DISABLED:
             gssflags |= spnego.ContextReq.mutual_auth
 
         try:
@@ -303,7 +307,9 @@ class HTTPKerberosAuth(AuthBase):
         This is necessary so that we can authenticate responses if requested.
         """
         _LOGGER.debug("Handling %i", response.status_code)
-        if self.mutual_authentication in (REQUIRED, OPTIONAL) and not self.auth_done:
+        if self.mutual_authentication in (
+            MutualAuthentication.REQUIRED, MutualAuthentication.OPTIONAL
+        ) and not self.auth_done:
             is_http_error = response.status_code >= 400
             if negotiate_value(response) is not None:
                 _LOGGER.debug("Authenticating the server")
@@ -321,7 +327,7 @@ class HTTPKerberosAuth(AuthBase):
                 _LOGGER.debug("Mutual authentication succeeded, returning %r", response)
                 return response
 
-            elif is_http_error or self.mutual_authentication == OPTIONAL:
+            elif is_http_error or self.mutual_authentication == MutualAuthentication.OPTIONAL:
                 if not response.ok:
                     _LOGGER.error(
                         "Mutual authentication unavailable on %i response",
@@ -329,7 +335,7 @@ class HTTPKerberosAuth(AuthBase):
                     )
 
                 if (
-                    self.mutual_authentication == REQUIRED
+                    self.mutual_authentication == MutualAuthentication.REQUIRED
                     and self.sanitize_mutual_error_response
                 ):
                     return SanitizedResponse(response)

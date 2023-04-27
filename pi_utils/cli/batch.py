@@ -19,6 +19,7 @@ from pi_utils.sdk.client import get_sdk_client
 from pi_utils.sdk.ops import batch_search
 from pi_utils.util.cli import exit_with_error, exit_with_success
 from pi_utils.util.files import load_csv_col, write_csv
+from pi_utils.util.kerberos import MutualAuthentication
 from pi_utils.web.client import get_web_client
 from pi_utils.web.ops import find_tags, get_interpolated, get_recorded
 
@@ -284,8 +285,9 @@ def data(
         ),
     ),
     login: bool = Option(default=False, help="Prompt for kerberos principal."),
-    mutual_authentication: bool = Option(
-        default=True, help="Require mutual authentication from server in kerberos auth."
+    mutual_authentication: Optional[MutualAuthentication] = Option(
+        default=None,
+        help="Require mutual authentication from server in kerberos auth."
     ),
     service: Optional[str] = Option(
         default=None,
@@ -350,7 +352,7 @@ def data(
         "delegate": delegate,
         "hostname_override": hostname_override,
         "send_cbt": send_cbt,
-        "mutual_authentication": 1 if mutual_authentication else 3,
+        "mutual_authentication": mutual_authentication,
     }
     if login:
         principal = SecretStr(Prompt.ask("Enter Principal", password=True))
