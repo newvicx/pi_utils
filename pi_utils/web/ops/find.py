@@ -1,3 +1,4 @@
+import functools
 import logging
 from collections.abc import Sequence
 from typing import List, Tuple
@@ -22,7 +23,9 @@ def find_dataserver(client: PIWebClient, dataserver: str | None = None) -> str:
             handling the request.
     """
     response = handle_request(
-        client.dataservers.list(selectedFields="Items.Name;Items.WebId")
+        functools.partial(
+            client.dataservers.list, selectedFields="Items.Name;Items.WebId"
+        )
     )
     data = handle_response(response)
     items = data.get("Items")
@@ -68,8 +71,9 @@ def find_tags(
 
     results = [
         handle_response(
-            handle_response(
-                client.dataservers.get_points(
+            handle_request(
+                functools.partial(
+                    client.dataservers.get_points,
                     dataserver_web_id,
                     nameFilter=tag,
                     selectedFields="Items.Name;Items.WebId",
