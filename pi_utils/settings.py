@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict
 
-from pydantic import BaseSettings, FilePath, Field, SecretStr
+from pydantic import BaseSettings, FilePath, Field, SecretStr, validator
 
 from pi_utils.util.formatting import format_docstring
 from pi_utils.util.kerberos import MutualAuthentication
@@ -146,6 +146,15 @@ class WebSettings(BaseSettings):
         connecting over a TLS connection. Defaults to `True`."""
         ),
     )
+
+    @validator("verify")
+    def maybe_disable_verification_warning(cls, verify: bool | Path) -> bool | Path:
+        # Only disable if verify is explicitely False
+        if verify is False:
+            import urllib3
+            import urllib3.exceptions
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        return verify
 
     @property
     def kerberos_settings(self) -> Dict[str, str | bool | int | None]:
