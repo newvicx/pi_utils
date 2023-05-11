@@ -40,8 +40,7 @@ class PIWebClient:
 
         if not session:
             session = requests.Session()
-            if verify:
-                session.verify = verify
+            session.verify = verify
             if headers:
                 headers = CaseInsensitiveDict(**headers)
                 session.headers = headers
