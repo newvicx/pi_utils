@@ -277,18 +277,16 @@ def data(
     ),
     tls: bool = Option(
         default=True,
-        help=(
-            "Connect to the web API over TLS. Can be set with PI_UTILS_WEB_TLS "
-            "environment variable."
-        ),
+        help="Connect to the web API over TLS.",
     ),
     verify: Optional[Path] = Option(
         default=True,
-        help=(
-            "A path to a CA bundle to use. Can be set with PI_UTILS_WEB_VERIFY "
-            "environment variable."
-        ),
+        help="A path to a CA bundle to use.",
         dir_okay=False
+    ),
+    ssl_verification: Optional[bool] = Option(
+        default=True,
+        help="Toggle to disable ssl verification."
     ),
     dataserver: Optional[str] = Option(
         default=None,
@@ -316,10 +314,7 @@ def data(
     ),
     delegate: bool = Option(
         default=False,
-        help=(
-            "Indicates that the user's credentials are to be delegated to the server. "
-            "Can be set through the PI_UTILS_WEB_DELEGATE environment variable."
-        ),
+        help="Indicates that the user's credentials are to be delegated to the server.",
     ),
     hostname_override: Optional[str] = Option(
         default=None,
@@ -334,8 +329,7 @@ def data(
         default=True,
         help=(
             "Automatically attempt to bind the authentication token with the "
-            "channel binding data when connecting over a TLS connection. Can be "
-            "set with the PI_UTILS_WEB_SEND_CBT environment variable."
+            "channel binding data when connecting over a TLS connection."
         ),
     ),
 ) -> None:
@@ -358,6 +352,9 @@ def data(
             tag = load_csv_col(tag_file, "tag")
         except RuntimeError as e:
             exit_with_error(str(e))
+
+    if not ssl_verification:
+        verify = False
 
     runtime_settings = {
         "server": server,
