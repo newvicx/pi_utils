@@ -19,7 +19,6 @@ from pi_utils.sdk.client import get_sdk_client
 from pi_utils.sdk.ops import batch_search
 from pi_utils.util.cli import exit_with_error, exit_with_success
 from pi_utils.util.files import load_csv_col, write_csv
-from pi_utils.util.kerberos import MutualAuthentication
 from pi_utils.web.client import get_web_client
 from pi_utils.web.ops import find_tags, get_interpolated, get_recorded
 
@@ -283,6 +282,14 @@ def data(
             "environment variable."
         ),
     ),
+    verify: Optional[Path] = Option(
+        default=True,
+        help=(
+            "A path to a CA bundle to use. Can be set with PI_UTILS_WEB_VERIFY "
+            "environment variable."
+        ),
+        dir_okay=False
+    ),
     dataserver: Optional[str] = Option(
         default=None,
         help=(
@@ -358,6 +365,7 @@ def data(
         "host": host,
         "port": port,
         "tls": tls,
+        "verify": verify,
         "dataserver": dataserver,
         "service": service,
         "delegate": delegate,
