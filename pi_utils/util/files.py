@@ -1,7 +1,7 @@
 import csv
 from collections.abc import Iterable
 from pathlib import Path
-from typing import List
+from typing import List, TextIO
 
 from pi_utils.types import TimeseriesRow
 
@@ -32,3 +32,17 @@ def write_csv(
         for timestamp, data in buffer:
             data.extend(padding)
             writer.writerow((timestamp.isoformat(), *data))
+
+
+def write_csv_buffer(
+    buffer: TextIO, stream: Iterable[TimeseriesRow], header: List[str], pad: int = 0
+) -> None:
+    """Write timeseries data to a TextIO buffer."""
+    padding = [None] * pad
+    writer = csv.writer(buffer, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(header)
+    for timestamp, data in stream:
+        data.extend(padding)
+        writer.writerow((timestamp.isoformat(), *data))
+    
+    buffer.seek(0)
