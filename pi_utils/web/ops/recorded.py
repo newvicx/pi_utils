@@ -23,6 +23,7 @@ def get_recorded(
     request_chunk_size: int | None = None,
     scan_rate: float | None = None,
     timezone: str | None = None,
+    max_workers: int = 6
 ) -> Iterable[TimeseriesRow]:
     """Stream timestamp aligned, interpolated data for a sequence of PI tags.
 
@@ -40,6 +41,7 @@ def get_recorded(
             pieces. Defaults to 5000.
         timezone: The timezone to convert the returned data into. Defaults to
             the local system timezone.
+        max_workers: The maximum number of concurrent threads to make requests.
 
     Yields:
         row: A `TimeseriesRow`.
@@ -64,7 +66,7 @@ def get_recorded(
         scan_rate=scan_rate,
     )
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for start_time, end_time in zip(start_times, end_times):
             futs = [
                 executor.submit(
