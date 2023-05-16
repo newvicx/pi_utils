@@ -52,3 +52,17 @@ class Streams(Consumer):
         associations: Query = None,
     ) -> Response:
         """https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/controllers/stream/actions/getrecordedattime.html"""
+
+    @get("/piwebapi/streams/{web_id}/interpolatedattimes")
+    def get_interpolated_at_times(
+        self,
+        web_id: str,
+        time: Query = None,
+        timeZone: Query = None,
+        desiredUnits: Query = None,
+        filterExpression: Query = None,
+        includeFilteredValues: Query = None,
+        sortOrder: Query = None,
+        selectedFields: Query = None,
+    ) -> Response:
+        """https://docs.aveva.com/bundle/pi-web-api-reference/page/help/controllers/stream/actions/getinterpolatedattimes.html"""

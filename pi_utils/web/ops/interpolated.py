@@ -23,6 +23,7 @@ def get_interpolated(
     interval: timedelta | int | None = None,
     request_chunk_size: int | None = None,
     timezone: str | None = None,
+    max_workers: int = 6
 ) -> Iterable[TimeseriesRow]:
     """Stream timestamp aligned, interpolated data for a sequence of PI tags.
 
@@ -40,6 +41,7 @@ def get_interpolated(
             pieces. Defaults to 5000.
         timezone: The timezone to convert the returned data into. Defaults to
             the local system timezone.
+        max_workers: The maximum number of concurrent threads to make requests.
 
     Yields:
         row: A `TimeseriesRow`.
@@ -47,7 +49,8 @@ def get_interpolated(
     Raises:
         ValueError: If `start_time` >= `end_time`.
         TypeError: If `interval` is an invalid type.
-        ClientError: Error in `aiohttp.ClientSession`.
+        RequestException: There was an ambiguous exception that occurred while
+            handling the request.
     """
     end_time = end_time or datetime.now()
     if start_time >= end_time:
@@ -68,7 +71,7 @@ def get_interpolated(
         request_chunk_size=request_chunk_size,
     )
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for start_time, end_time in zip(start_times, end_times):
             futs = [
                 executor.submit(
@@ -100,3 +103,61 @@ def get_interpolated(
 
             for row in iter_timeseries_rows(index=index, data=data, timezone=timezone):
                 yield row
+
+
+def get_interpolated_at_time(
+    client: PIWebClient, web_ids: List[str], time: datetime, timezone: str | None = None
+) -> TimeseriesRow:
+    """Returns the interpolated value for sequence of PI tags at a specific time.
+
+    Args:
+        client: The PIWebClient used to retrieve the data.
+        web_ids: The web_ids to stream data for.
+        time: The time to get the value at.
+        timezone: The timezone to convert the returned data into. Defaults to
+            the local system timezone.
+
+    Raises:
+        RequestException: There was an ambiguous exception that occurred while
+            handling the request.
+    """
+    timezone = timezone or LOCAL_TZ
+
+    results = [
+        handle_response(
+            handle_request(
+                functools.partial(
+                    client.streams.get_interpolated_at_times,
+                    web_id,
+                    time=time.isoformat(),
+                    timeZone=timezone,
+                    selectedFields="Items.Timestamp;Items.Value;Items.Good",
+                ),
+                raise_for_status=False,
+            ),
+            raise_for_status=False,
+            raise_for_content_error=False,
+        )
+        for web_id in web_ids
+    ]
+
+    row = []
+    for result in results:
+        if not result:
+            row.append(None)
+            continue
+        items = result.get("Items", [])
+        if items:
+            assert len(items) == 1
+            result = items[0]
+            if result["Good"]:
+                value = result["Value"]
+                if isinstance(value, dict):
+                    row.append(value["Name"])
+                else:
+                    row.append(value)
+            else:
+                row.append(None)
+        else:
+            row.append(None)
+    return time, row
