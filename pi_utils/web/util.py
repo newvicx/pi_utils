@@ -27,7 +27,7 @@ def format_streams_content(
         if not good:
             value = None
         else:
-            # If a stream item returned an error, the value will be `None`` anyway
+            # If a stream item returned an error, the value will be `None` anyway
             # and we're not particularly interested in the errors
             # https://docs.osisoft.com/bundle/pi-web-api-reference/page/help/topics/error-handling.html
             value = item["Value"]
