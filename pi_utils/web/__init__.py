@@ -5,10 +5,12 @@ from .ops import (
     find_dataserver,
     find_tags,
     get_interpolated,
+    get_interpolated_at_time,
     get_recorded,
     get_recorded_at_time,
     subscribe,
 )
+from .resource import Resource
 
 
 __all__ = [
@@ -20,7 +22,9 @@ __all__ = [
     "find_dataserver",
     "find_tags",
     "get_interpolated",
+    "get_interpolated_at_time",
     "get_recorded",
     "get_recorded_at_time",
     "subscribe",
+    "Resource",
 ]
