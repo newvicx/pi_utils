@@ -5,7 +5,6 @@ from typing import Deque
 from pi_utils.web.channels.models import ChannelMessage
 
 
-
 MAX_BUFFER = 200
 
 

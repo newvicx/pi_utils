@@ -23,7 +23,7 @@ def get_interpolated(
     interval: timedelta | int | None = None,
     request_chunk_size: int | None = None,
     timezone: str | None = None,
-    max_workers: int = 6
+    max_workers: int = 6,
 ) -> Iterable[TimeseriesRow]:
     """Stream timestamp aligned, interpolated data for a sequence of PI tags.
 

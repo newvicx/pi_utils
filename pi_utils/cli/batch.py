@@ -280,13 +280,10 @@ def data(
         help="Connect to the web API over TLS.",
     ),
     verify: Optional[Path] = Option(
-        default=True,
-        help="A path to a CA bundle to use.",
-        dir_okay=False
+        default=True, help="A path to a CA bundle to use.", dir_okay=False
     ),
     ssl_verification: Optional[bool] = Option(
-        default=True,
-        help="Toggle to disable ssl verification."
+        default=True, help="Toggle to disable ssl verification."
     ),
     dataserver: Optional[str] = Option(
         default=None,

@@ -307,9 +307,11 @@ class HTTPKerberosAuth(AuthBase):
         This is necessary so that we can authenticate responses if requested.
         """
         _LOGGER.debug("Handling %i", response.status_code)
-        if self.mutual_authentication in (
-            MutualAuthentication.REQUIRED, MutualAuthentication.OPTIONAL
-        ) and not self.auth_done:
+        if (
+            self.mutual_authentication
+            in (MutualAuthentication.REQUIRED, MutualAuthentication.OPTIONAL)
+            and not self.auth_done
+        ):
             is_http_error = response.status_code >= 400
             if negotiate_value(response) is not None:
                 _LOGGER.debug("Authenticating the server")
@@ -327,7 +329,10 @@ class HTTPKerberosAuth(AuthBase):
                 _LOGGER.debug("Mutual authentication succeeded, returning %r", response)
                 return response
 
-            elif is_http_error or self.mutual_authentication == MutualAuthentication.OPTIONAL:
+            elif (
+                is_http_error
+                or self.mutual_authentication == MutualAuthentication.OPTIONAL
+            ):
                 if not response.ok:
                     _LOGGER.error(
                         "Mutual authentication unavailable on %i response",

@@ -44,5 +44,5 @@ def write_csv_buffer(
     for timestamp, data in stream:
         data.extend(padding)
         writer.writerow((timestamp.isoformat(), *data))
-    
+
     buffer.seek(0)

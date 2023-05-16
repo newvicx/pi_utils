@@ -13,9 +13,9 @@ from pi_utils.web.ops.interpolated import get_interpolated, get_interpolated_at_
 from pi_utils.web.ops.recorded import get_recorded, get_recorded_at_time
 
 
-
 class Resource:
     """A container for mapping common names to PI tags for assets."""
+
     def __init__(
         self,
         client: PIWebClient,
@@ -25,7 +25,7 @@ class Resource:
         web_ids: List[str],
         dataserver: str | None,
         timezone: str | None,
-        retention: int = 15
+        retention: int = 15,
     ) -> None:
         self.client = client
         self.mapping = mapping
@@ -47,10 +47,10 @@ class Resource:
         mapping: Dict[str, str],
         dataserver: str | None = None,
         timezone: str | None = None,
-        retention: int = 15
+        retention: int = 15,
     ) -> "Resource":
         """Create a new resource instance.
-        
+
         Discovers all WebId for all tags in the mapping and handles ordering of
         data items and tags for operations.
 
@@ -71,7 +71,7 @@ class Resource:
         mapped, unmapped = find_tags(
             client=client,
             tags=[v for _, v in index if v is not None],
-            dataserver=dataserver
+            dataserver=dataserver,
         )
 
         data_items = []
@@ -88,16 +88,16 @@ class Resource:
             tags.append(tag)
             web_ids.append(web_id)
             map_data_items()
-        
+
         for tag in unmapped:
             tags.append(tag)
             map_data_items()
-        
+
         # The remaining values in index should be data items where the
         # tag was `None`
         while index:
             data_items.append(index.pop(0)[0])
-        
+
         return cls(
             client=client,
             mapping=mapping,
@@ -106,12 +106,12 @@ class Resource:
             web_ids=web_ids,
             dataserver=dataserver,
             timezone=timezone,
-            retention=retention
+            retention=retention,
         )
 
     def child(self, *items: str) -> "Resource":
         """Returns a child resource containing only the specified data items.
-        
+
         Raises:
             KeyError: An item does not exist in the mapping.
         """
@@ -121,9 +121,9 @@ class Resource:
             client=self.client,
             mapping=mapping,
             dataserver=self.dataserver,
-            timezone=self.timezone
+            timezone=self.timezone,
         )
-    
+
     def current(self, recorded: bool = False) -> Dict[str, datetime | JSONPrimitive]:
         """Retrieve the current value for each tag in the resource. Current time
         is rounded down to the second.
@@ -134,20 +134,17 @@ class Resource:
             getter = get_recorded_at_time
         else:
             getter = get_interpolated_at_time
-        
+
         timestamp, row = getter(
-            client=self.client,
-            web_ids=self.web_ids,
-            time=now,
-            timezone=self.timezone
+            client=self.client, web_ids=self.web_ids, time=now, timezone=self.timezone
         )
-        
+
         current = {"timestamp": timestamp}
         for data_item, value in itertools.zip_longest(self.data_items, row):
             current[data_item] = value
-        
+
         return current
-    
+
     def last(
         self,
         seconds: float | None = 0,
@@ -157,20 +154,17 @@ class Resource:
         recorded: bool = False,
         interval: int | None = None,
         scan_rate: int | None = None,
-        max_workers: int = 1
+        max_workers: int = 1,
     ) -> TextIO:
         """Retrieve data for all data items in a time period relative to the
         current time. If no period is specified, defaults to the last 15 minutes.
         """
         if not seconds and not minutes and not hours and not days:
             minutes = 15
-        
+
         now = datetime.now().replace(microsecond=0)
         start_time = now - timedelta(
-            days=days,
-            hours=hours,
-            minutes=minutes,
-            seconds=seconds
+            days=days, hours=hours, minutes=minutes, seconds=seconds
         )
 
         return self.range(
@@ -179,7 +173,7 @@ class Resource:
             recorded=recorded,
             interval=interval,
             scan_rate=scan_rate,
-            max_workers=max_workers
+            max_workers=max_workers,
         )
 
     def range(
@@ -189,32 +183,27 @@ class Resource:
         recorded: bool = False,
         interval: int | None = None,
         scan_rate: int | None = None,
-        max_workers: int = 1
+        max_workers: int = 1,
     ) -> TextIO:
         """Retrieve data for all data items in a time range."""
         if recorded:
             getter = functools.partial(get_recorded, scan_rate=scan_rate)
         else:
             getter = functools.partial(get_interpolated, interval=interval)
-        
+
         stream = getter(
             client=self.client,
             web_ids=self.web_ids,
             start_time=start_time,
             end_time=end_time,
             timezone=self.timezone,
-            max_workers=max_workers
+            max_workers=max_workers,
         )
         buffer = io.StringIO(newline="")
         pad = len(self.data_items) - len(self.web_ids)
         header = self.data_items.copy()
         header.insert(0, "timestamp")
-        write_csv_buffer(
-            buffer=buffer,
-            stream=stream,
-            header=header,
-            pad=pad
-        )
+        write_csv_buffer(buffer=buffer, stream=stream, header=header, pad=pad)
 
         return buffer
 
