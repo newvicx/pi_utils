@@ -1,5 +1,5 @@
 from .channels import ChannelMessage, Subscriber
-from .client import PIWebClient, get_web_client
+from .client import PIWebClient, get_web_client, initialize_web_client
 from .exceptions import APIResponseError
 from .ops import (
     find_dataserver,
@@ -18,6 +18,7 @@ __all__ = [
     "Subscriber",
     "PIWebClient",
     "get_web_client",
+    "initialize_web_client",
     "APIResponseError",
     "find_dataserver",
     "find_tags",

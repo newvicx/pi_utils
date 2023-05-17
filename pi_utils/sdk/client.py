@@ -93,7 +93,20 @@ class SDKClient:
                 del connection
 
 
-def get_sdk_client(
+def get_sdk_client() -> SDKClient:
+    """Get an initialized sdk client instance.
+    
+    If `initialize_sdk_client` has not been called, this will raise `RuntimeError`.
+    """
+    with _sdk_client_lock:
+        global _SDK_CLIENT
+        if _SDK_CLIENT is not None:
+            assert isinstance(_SDK_CLIENT, SDKClient)
+            return _SDK_CLIENT
+        raise RuntimeError("SDK client not initialized.")
+
+
+def initialize_sdk_client(
     server: str, path: str | Path | None = None, max_connections: int = 4
 ) -> SDKClient:
     """Build a `SDKClient`. This returns a singleton instance of the client."""

@@ -15,11 +15,11 @@ from typer import Option, Typer
 
 from pi_utils.cli.root import app
 from pi_utils.settings import SDKSettings, WebSettings
-from pi_utils.sdk.client import get_sdk_client
+from pi_utils.sdk.client import initialize_sdk_client
 from pi_utils.sdk.ops import batch_search
 from pi_utils.util.cli import exit_with_error, exit_with_success
 from pi_utils.util.files import load_csv_col, write_csv
-from pi_utils.web.client import get_web_client
+from pi_utils.web.client import initialize_web_client
 from pi_utils.web.ops import find_tags, get_interpolated, get_recorded
 
 
@@ -113,7 +113,7 @@ def search(
             "PI_UTILS_SDK_SERVER env var."
         )
 
-    client = get_sdk_client(
+    client = initialize_sdk_client(
         server=settings.server, path=settings.path, max_connections=1
     )
 
@@ -386,7 +386,7 @@ def data(
             "PI_UTILS_WEB_HOST env var."
         )
 
-    sdk_client = get_sdk_client(
+    sdk_client = initialize_sdk_client(
         server=sdk_settings.server, path=sdk_settings.path, max_connections=1
     )
     reader = csv.DictReader(
@@ -413,7 +413,7 @@ def data(
         for row in reader
     ]
 
-    with get_web_client(
+    with initialize_web_client(
         host=web_settings.host,
         port=web_settings.port,
         tls=web_settings.tls,

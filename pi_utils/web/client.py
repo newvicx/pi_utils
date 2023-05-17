@@ -111,7 +111,20 @@ class PIWebClient:
         self.close()
 
 
-def get_web_client(*args: Any, **kwargs: Any) -> PIWebClient:
+def get_web_client() -> PIWebClient:
+    """Get an initialized web client instance.
+    
+    If `initialize_web_client` has not been called, this will raise `RuntimeError`.
+    """
+    with _web_client_lock:
+        global _WEB_CLIENT
+        if _WEB_CLIENT is not None:
+            assert isinstance(_WEB_CLIENT, PIWebClient)
+            return _WEB_CLIENT
+        raise RuntimeError("Web client not initialized.")
+
+
+def initialize_web_client(*args: Any, **kwargs: Any) -> PIWebClient:
     """Build a `PiWebClient`. This returns a singleton instance of the client."""
     with _web_client_lock:
         global _WEB_CLIENT
