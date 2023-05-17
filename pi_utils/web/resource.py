@@ -3,7 +3,7 @@ import io
 import itertools
 from collections import deque
 from datetime import datetime, timedelta
-from typing import Deque, Dict, List, TextIO
+from typing import Any, Deque, Dict, List, TextIO
 
 from pi_utils.types import JSONPrimitive
 from pi_utils.util.files import write_csv_buffer
@@ -109,6 +109,16 @@ class Resource:
             retention=retention,
         )
 
+    def set_meta(self, meta: Dict[str, Any]) -> None:
+        """Set any meta information on the resource as attributes.
+        
+        This method ensures that no current attributes are overwritten.
+        """
+        for k, v in meta.items():
+            if hasattr(self, k):
+                raise AttributeError(f"'{k}' already used.")
+            setattr(self, k, v)
+
     def child(self, *items: str) -> "Resource":
         """Returns a child resource containing only the specified data items.
 
@@ -124,12 +134,24 @@ class Resource:
             timezone=self.timezone,
         )
 
+    def join(self, prefix: str, mapping: Dict[str, str]) -> "Resource":
+        """Join the mapping of the current resource with a different mapping.
+        Each data item in the joined mapping is prefixed with '{prefix}_'.
+        """
+        mapping = {f"{prefix}_{item}": v for item, v in mapping.items()}
+        mapping.update(self.mapping)
+        return self.new(
+            client=self.client,
+            mapping=mapping,
+            dataserver=self.dataserver,
+            timezone=self.timezone
+        )
+
     def current(self, recorded: bool = False) -> Dict[str, datetime | JSONPrimitive]:
         """Retrieve the current value for each tag in the resource. Current time
         is rounded down to the second.
         """
         now = datetime.now().replace(microsecond=0)
-        print(now)
         if recorded:
             getter = get_recorded_at_time
         else:
