@@ -10,7 +10,6 @@ from .ops import (
     get_recorded_at_time,
     subscribe,
 )
-from .resource import Resource
 
 
 __all__ = [
@@ -27,5 +26,4 @@ __all__ = [
     "get_recorded",
     "get_recorded_at_time",
     "subscribe",
-    "Resource",
 ]
