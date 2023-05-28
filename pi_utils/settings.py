@@ -69,6 +69,11 @@ class WebSettings(BaseSettings):
         Defaults to `None`."""
         ),
     )
+    timezone: str = Field(
+        default=None,
+        description=format_docstring("""The timezone to convert the returned
+        data into. Defaults to the local system timezone.""")
+    )
     verify: bool | FilePath = Field(
         default=True,
         description=format_docstring(
@@ -100,7 +105,7 @@ class WebSettings(BaseSettings):
         ),
     )
     mutual_authentication: MutualAuthentication = Field(
-        default=MutualAuthentication,
+        default=MutualAuthentication.REQUIRED,
         decription=format_docstring(
             """Integer value defining the mutual
         authentication requirements (1: Required, 2: Optional, 3: Disabled).
