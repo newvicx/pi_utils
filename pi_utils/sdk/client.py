@@ -9,6 +9,7 @@ from typing import Any, Type
 import clr
 
 from pi_utils.sdk.types import SDK, SDKConnection, SDKSubBatch, SDKUnitBatch
+from pi_utils.settings import SDKSettings
 
 
 _LOGGER = logging.getLogger("pi_utils.sdk")
@@ -116,5 +117,28 @@ def initialize_sdk_client(
             assert isinstance(_SDK_CLIENT, SDKClient)
             return _SDK_CLIENT
         client = SDKClient(server=server, path=path, max_connections=max_connections)
+        _SDK_CLIENT = client
+        return client
+
+
+def get_default_sdk_client() -> SDKClient:
+    """Get or initialize a web client instance from environment settings."""
+    with _sdk_client_lock:
+        global _SDK_CLIENT
+        if _SDK_CLIENT is not None:
+            assert isinstance(_SDK_CLIENT, SDKClient)
+            return _SDK_CLIENT
+
+        settings = SDKSettings()
+        if settings.server is None:
+            raise RuntimeError(
+                "Could not determine server. Ensure the the PI_UTILS_SDK_SERVER "
+                "environment variable is set for this runtime."
+            )
+        client = SDKClient(
+            server=settings.server,
+            path=settings.path,
+            max_connections=settings.max_connections
+        )
         _SDK_CLIENT = client
         return client

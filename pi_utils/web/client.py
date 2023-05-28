@@ -8,6 +8,7 @@ from requests.models import CaseInsensitiveDict
 from uplink import Consumer
 from websockets.sync.connection import Connection
 
+from pi_utils.settings import WebSettings
 from pi_utils.util.kerberos import HTTPKerberosAuth
 from pi_utils.web.controllers import Channels, DataServers, Streams
 
@@ -132,5 +133,32 @@ def initialize_web_client(*args: Any, **kwargs: Any) -> PIWebClient:
             assert isinstance(_WEB_CLIENT, PIWebClient)
             return _WEB_CLIENT
         client = PIWebClient(*args, **kwargs)
+        _WEB_CLIENT = client
+        return client
+
+
+def get_default_web_client() -> PIWebClient:
+    """Get or initialize a web client instance from environment settings."""
+    with _web_client_lock:
+        global _WEB_CLIENT
+        if _WEB_CLIENT is not None:
+            assert isinstance(_WEB_CLIENT, PIWebClient)
+            return _WEB_CLIENT
+
+        settings = WebSettings()
+        if settings.host is None:
+            raise RuntimeError(
+                "Could not determine host. Ensure the the PI_UTILS_WEB_HOST "
+                "environment variable is set for this runtime."
+            )
+        client = PIWebClient(
+            host=settings.host,
+            port=settings.port,
+            tls=settings.tls,
+            verify=settings.verify,
+            headers=settings.headers,
+            cookies=settings.cookies,
+            **settings.kerberos_settings
+        )
         _WEB_CLIENT = client
         return client
