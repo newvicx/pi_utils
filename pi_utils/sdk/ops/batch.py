@@ -223,6 +223,11 @@ def batch_search(
     )
 
     units = [unit.strip() for unit in unit_id.split(",")]
+    batch_ids = [batch.strip() for batch in batch_id.split(",")]
+    products = [product_.strip() for product_ in product.split(",")]
+    procedures = [procedure_.strip() for procedure_ in procedure.split(",")]
+    sub_batches = [batch.strip() for batch in sub_batch.split(",")]
+
     with client.get_connection() as connection:
         db = connection.PIModuleDB
         batches: List[SDKUnitBatch] = list(
@@ -234,13 +239,16 @@ def batch_search(
                             start_time,
                             end_time,
                             unit,
-                            batch_id,
-                            product,
-                            procedure,
-                            sub_batch,
+                            batch,
+                            product_,
+                            procedure_,
+                            sub_batch_,
                         )
                     ]
-                    for unit in units
+                    for unit, batch, product_, procedure_, sub_batch_
+                    in itertools.product(
+                        units, batch_ids, products, procedures, sub_batches
+                    )
                 ]
             )
         )
